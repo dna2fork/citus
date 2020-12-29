@@ -284,6 +284,10 @@ GetCitusTableFunction(ExecuteCitusTableFunctionFlag executeCitusTableFunctionFla
 		{
 			return UndistributeTable;
 		}
+		case CREATE_CITUS_LOCAL_TABLE:
+		{
+			return CreateCitusLocalTable;
+		}
 
 		default:
 		{
