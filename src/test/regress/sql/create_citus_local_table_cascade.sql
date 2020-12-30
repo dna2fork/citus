@@ -41,7 +41,9 @@ BEGIN;
   -- show that we switch to sequential execution
   show citus.multi_shard_modify_mode;
 
-  SELECT COUNT(*)=5 FROM pg_constraint WHERE conname ~ '^fkey\_\d+$';
+  SELECT COUNT(*)=5 FROM pg_constraint
+  WHERE connamespace = (SELECT oid FROM pg_namespace WHERE nspname='create_citus_local_table_cascade') AND
+        conname ~ '^fkey\_\d+$';
 
   SELECT COUNT(*)=4 FROM pg_dist_partition, pg_tables
   WHERE tablename=logicalrelid::regclass::text AND
@@ -51,7 +53,9 @@ ROLLBACK;
 BEGIN;
   SELECT create_citus_local_table('local_table_4', cascade=>true);
 
-  SELECT COUNT(*)=5 FROM pg_constraint WHERE conname ~ '^fkey\_\d+$';
+  SELECT COUNT(*)=5 FROM pg_constraint
+  WHERE connamespace = (SELECT oid FROM pg_namespace WHERE nspname='create_citus_local_table_cascade') AND
+        conname ~ '^fkey\_\d+$';
 
   SELECT COUNT(*)=4 FROM pg_dist_partition, pg_tables
   WHERE tablename=logicalrelid::regclass::text AND
