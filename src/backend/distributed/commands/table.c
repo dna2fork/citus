@@ -18,6 +18,7 @@
 #include "catalog/index.h"
 #include "catalog/pg_class.h"
 #include "catalog/pg_constraint.h"
+#include "catalog/pg_depend.h"
 #include "commands/tablecmds.h"
 #include "distributed/citus_ruleutils.h"
 #include "distributed/colocation_utils.h"
@@ -28,6 +29,7 @@
 #include "distributed/listutils.h"
 #include "distributed/coordinator_protocol.h"
 #include "distributed/metadata_sync.h"
+#include "distributed/metadata/dependency.h"
 #include "distributed/multi_executor.h"
 #include "distributed/multi_partitioning_utils.h"
 #include "distributed/reference_table_utils.h"
@@ -42,6 +44,9 @@
 #include "utils/syscache.h"
 
 
+typedef bool (*AlterTableCommandFunc)(AlterTableCmd *, Oid);
+
+
 /* Local functions forward declarations for unsupported command checks */
 static void PostprocessCreateTableStmtPartitionOf(CreateStmt *createStatement,
 												  const char *queryString);
@@ -50,6 +55,12 @@ static void ErrorIfAlterTableDefinesFKeyFromPostgresToCitusLocalTable(
 static List * GetAlterTableStmtFKeyConstraintList(AlterTableStmt *alterTableStatement);
 static List * GetAlterTableCommandFKeyConstraintList(AlterTableCmd *command);
 static bool AlterTableCommandTypeIsTrigger(AlterTableType alterTableType);
+static bool AlterTableHasCommandByFunc(AlterTableStmt *alterTableStatement,
+									   AlterTableCommandFunc alterTableCommandFunc);
+static bool AlterTableCmdAddsOrDropsFkey(AlterTableCmd *command, Oid relationId);
+static bool AlterTableCmdAddsFKey(AlterTableCmd *command, Oid relationId);
+static bool AlterTableCmdDropsFkey(AlterTableCmd *command, Oid relationId);
+static bool AnyForeignKeyDependsOnIndex(Oid constraintId);
 static void ErrorIfUnsupportedAlterTableStmt(AlterTableStmt *alterTableStatement);
 static void ErrorIfCitusLocalTablePartitionCommand(AlterTableCmd *alterTableCmd,
 												   Oid parentRelationId);
@@ -101,8 +112,8 @@ PreprocessDropTableStmt(Node *node, const char *queryString)
 
 		Oid relationId = RangeVarGetRelid(tableRangeVar, AccessShareLock, missingOK);
 
-		/* we're not interested in non-valid, non-distributed relations */
-		if (relationId == InvalidOid || !IsCitusTable(relationId))
+		/* we're not interested in non-valid relations */
+		if (relationId == InvalidOid)
 		{
 			continue;
 		}
@@ -118,6 +129,12 @@ PreprocessDropTableStmt(Node *node, const char *queryString)
 		if ((TableReferenced(relationId) || TableReferencing(relationId)))
 		{
 			MarkInvalidateForeignKeyGraph();
+		}
+
+		/* we're not interested in non-distributed relations */
+		if (!IsCitusTable(relationId))
+		{
+			continue;
 		}
 
 		/* we're only interested in partitioned and mx tables */
@@ -181,6 +198,12 @@ PostprocessCreateTableStmt(CreateStmt *createStatement, const char *queryString)
 	if (HasForeignKeyToCitusLocalTable(relationId))
 	{
 		ErrorOutForFKeyBetweenPostgresAndCitusLocalTable(relationId);
+	}
+
+	/* invalidate foreign key cache if the table involved in any foreign key */
+	if ((TableReferenced(relationId) || TableReferencing(relationId)))
+	{
+		MarkInvalidateForeignKeyGraph();
 	}
 #endif
 
@@ -384,6 +407,11 @@ PreprocessAlterTableStmt(Node *node, const char *alterTableCommand)
 	 * tables to citus local tables here.
 	 */
 	ErrorIfAlterTableDefinesFKeyFromPostgresToCitusLocalTable(alterTableStatement);
+
+	if (AlterTableHasCommandByFunc(alterTableStatement, AlterTableCmdAddsOrDropsFkey))
+	{
+		MarkInvalidateForeignKeyGraph();
+	}
 
 	bool referencingIsLocalTable = !IsCitusTable(leftRelationId);
 	if (referencingIsLocalTable)
@@ -936,17 +964,6 @@ PostprocessAlterTableStmt(AlterTableStmt *alterTableStatement)
 			Assert(list_length(commandList) == 1);
 
 			ErrorIfUnsupportedAlterAddConstraintStmt(alterTableStatement);
-
-			if (!OidIsValid(relationId))
-			{
-				continue;
-			}
-
-			Constraint *constraint = (Constraint *) command->def;
-			if (constraint->contype == CONSTR_FOREIGN)
-			{
-				InvalidateForeignKeyGraph();
-			}
 		}
 		else if (alterTableType == AT_AddColumn)
 		{
@@ -977,6 +994,154 @@ PostprocessAlterTableStmt(AlterTableStmt *alterTableStatement)
 			}
 		}
 	}
+}
+
+
+/*
+ * AlterTableHasCommandByFunc returns true if given alterTableCommandFunc returns
+ * true for any subcommand of alterTableStatement.
+ */
+static bool
+AlterTableHasCommandByFunc(AlterTableStmt *alterTableStatement,
+						   AlterTableCommandFunc alterTableCommandFunc)
+{
+	List *commandList = alterTableStatement->cmds;
+	AlterTableCmd *command = NULL;
+	foreach_ptr(command, commandList)
+	{
+		LOCKMODE lockmode = AlterTableGetLockLevel(alterTableStatement->cmds);
+		Oid relationId = AlterTableLookupRelation(alterTableStatement, lockmode);
+		if (alterTableCommandFunc(command, relationId))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+/*
+ * AlterTableCmdAddsOrDropsFkey returns true if given alter table subcommand
+ * might add or drop a foreign key constraint.
+ */
+static bool
+AlterTableCmdAddsOrDropsFkey(AlterTableCmd *command, Oid relationId)
+{
+	return AlterTableCmdAddsFKey(command, relationId) ||
+		   AlterTableCmdDropsFkey(command, relationId);
+}
+
+
+/*
+ * AlterTableCmdAddsFKey returns true if given alter table subcommand might
+ * define a foreign key.
+ */
+static bool
+AlterTableCmdAddsFKey(AlterTableCmd *command, Oid relationId)
+{
+	AlterTableType alterTableType = command->subtype;
+
+	if (alterTableType == AT_AddConstraint)
+	{
+		Constraint *constraint = (Constraint *) command->def;
+		if (constraint->contype == CONSTR_FOREIGN)
+		{
+			return true;
+		}
+	}
+	else if (alterTableType == AT_AddColumn)
+	{
+		ColumnDef *columnDef = (ColumnDef *) command->def;
+		List *constraints = columnDef->constraints;
+		Constraint *constraint = NULL;
+		foreach_ptr(constraint, constraints)
+		{
+			if (constraint->contype == CONSTR_FOREIGN)
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+
+/*
+ * AlterTableCmdDropsFkey returns true if given alter table subcommand might drop:
+ *   - a foreign key or,
+ *   - a uniqueness constraint that a foreign key depends on or,
+ *   - a referencing column of a foreign key or,
+ *   - a referenced column of a foreign key.
+ */
+static bool
+AlterTableCmdDropsFkey(AlterTableCmd *command, Oid relationId)
+{
+	AlterTableType alterTableType = command->subtype;
+
+	if (alterTableType == AT_DropConstraint)
+	{
+		char *constraintName = command->name;
+		if (ConstraintIsAForeignKey(constraintName, relationId))
+		{
+			return true;
+		}
+		else if (ConstraintIsAUniquenessConstraint(constraintName, relationId))
+		{
+			bool missingOk = false;
+			Oid uniquenessConstraintId =
+				get_relation_constraint_oid(relationId, constraintName, missingOk);
+			Oid indexId = get_constraint_index(uniquenessConstraintId);
+			if (AnyForeignKeyDependsOnIndex(indexId))
+			{
+				return true;
+			}
+		}
+	}
+	else if (alterTableType == AT_DropColumn)
+	{
+		char *columnName = command->name;
+		if (ColumnAppearsInForeignKey(columnName, relationId))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+/*
+ * AnyForeignKeyDependsOnIndex scans pg_depend and returns true if given index
+ * is valid and any foreign key depends on it.
+ */
+static bool
+AnyForeignKeyDependsOnIndex(Oid indexId)
+{
+	Oid dependentObjectClassId = RelationRelationId;
+	Oid dependentObjectId = indexId;
+	List *dependencyTupleList =
+		GetPgDependTuplesForDependingObjects(dependentObjectClassId, dependentObjectId);
+
+	HeapTuple dependencyTuple = NULL;
+	foreach_ptr(dependencyTuple, dependencyTupleList)
+	{
+		Form_pg_depend dependencyForm = (Form_pg_depend) GETSTRUCT(dependencyTuple);
+		Oid dependingClassId = dependencyForm->classid;
+		if (dependingClassId != ConstraintRelationId)
+		{
+			continue;
+		}
+
+		Oid dependingObjectId = dependencyForm->objid;
+		if (ConstraintWithIdIsOfType(dependingObjectId, CONSTRAINT_FOREIGN))
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
 
 
@@ -1347,11 +1512,6 @@ ErrorIfUnsupportedAlterTableStmt(AlterTableStmt *alterTableStatement)
 				if (!OidIsValid(relationId))
 				{
 					return;
-				}
-
-				if (ConstraintIsAForeignKey(command->name, relationId))
-				{
-					MarkInvalidateForeignKeyGraph();
 				}
 
 				break;

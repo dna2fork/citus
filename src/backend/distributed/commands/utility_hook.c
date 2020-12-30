@@ -517,6 +517,17 @@ multi_ProcessUtility(PlannedStmt *pstmt,
 	{
 		PostStandardProcessUtility(parsetree);
 
+		/*
+		 * We call MarkInvalidateForeignKeyGraph in preprocess without knowing
+		 * that if command would fail or not. However, we don't want to invalidate
+		 * foreign key graph for failed DDL commands, so here we don't call
+		 * InvalidateForeignKeyGraphForDDL.
+		 * On the other hand, we should still reset shouldInvalidateForeignKeyGraph
+		 * flag as next DDL command still relies on this flag to invalidate foreign
+		 * key graph.
+		 */
+		shouldInvalidateForeignKeyGraph = false;
+
 		PG_RE_THROW();
 	}
 	PG_END_TRY();
@@ -524,6 +535,24 @@ multi_ProcessUtility(PlannedStmt *pstmt,
 	/*
 	 * Post process for ddl statements
 	 */
+
+	if (IsA(parsetree, CreateStmt))
+	{
+		CreateStmt *createStatement = (CreateStmt *) parsetree;
+
+		PostprocessCreateTableStmt(createStatement, queryString);
+	}
+
+	/*
+	 * Re-forming the foreign key graph relies on the command being executed
+	 * on the local table first. However, in order to decide whether the
+	 * command leads to an invalidation, we need to check before the command
+	 * is being executed since we read pg_constraint table. Thus, we maintain a
+	 * local flag and do the invalidation after multi_ProcessUtility,
+	 * before ExecuteDistributedDDLJob().
+	 */
+	InvalidateForeignKeyGraphForDDL();
+
 	if (EnableDDLPropagation)
 	{
 		if (ops && ops->postprocess)
@@ -545,13 +574,6 @@ multi_ProcessUtility(PlannedStmt *pstmt,
 							 errhint("Connect to worker nodes directly to manually "
 									 "rename the role")));
 		}
-	}
-
-	if (IsA(parsetree, CreateStmt))
-	{
-		CreateStmt *createStatement = (CreateStmt *) parsetree;
-
-		PostprocessCreateTableStmt(createStatement, queryString);
 	}
 
 	/*
@@ -890,16 +912,6 @@ static void
 PostStandardProcessUtility(Node *parsetree)
 {
 	DecrementUtilityHookCountersIfNecessary(parsetree);
-
-	/*
-	 * Re-forming the foreign key graph relies on the command being executed
-	 * on the local table first. However, in order to decide whether the
-	 * command leads to an invalidation, we need to check before the command
-	 * is being executed since we read pg_constraint table. Thus, we maintain a
-	 * local flag and do the invalidation after multi_ProcessUtility,
-	 * before ExecuteDistributedDDLJob().
-	 */
-	InvalidateForeignKeyGraphForDDL();
 }
 
 
@@ -943,6 +955,8 @@ InvalidateForeignKeyGraphForDDL(void)
 {
 	if (shouldInvalidateForeignKeyGraph)
 	{
+		ereport(DEBUG1, (errmsg("DDL command invalidates foreign key graph")));
+
 		InvalidateForeignKeyGraph();
 
 		shouldInvalidateForeignKeyGraph = false;
