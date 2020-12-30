@@ -52,7 +52,9 @@ BEGIN;
   -- show that we switch to sequential execution
   show citus.multi_shard_modify_mode;
 
-  SELECT COUNT(*)=7 FROM pg_constraint WHERE conname ~ '^fkey\_\d+$';
+  SELECT COUNT(*)=7 FROM pg_constraint
+  WHERE connamespace = (SELECT oid FROM pg_namespace WHERE nspname='undistribute_table_cascade') AND
+        conname ~ '^fkey\_\d+$';
 
   SELECT COUNT(*)=0 FROM pg_dist_partition, pg_tables
   WHERE tablename=logicalrelid::regclass::text AND
@@ -62,7 +64,9 @@ ROLLBACK;
 BEGIN;
   SELECT undistribute_table('reference_table_1', cascade=>true);
 
-  SELECT COUNT(*)=7 FROM pg_constraint WHERE conname ~ '^fkey\_\d+$';
+  SELECT COUNT(*)=7 FROM pg_constraint
+  WHERE connamespace = (SELECT oid FROM pg_namespace WHERE nspname='undistribute_table_cascade') AND
+        conname ~ '^fkey\_\d+$';
 
   SELECT COUNT(*)=0 FROM pg_dist_partition, pg_tables
   WHERE tablename=logicalrelid::regclass::text AND
@@ -74,7 +78,10 @@ BEGIN;
 
   -- print foreign keys only in one of xact blocks not to make tests too verbose
   SELECT conname, conrelid::regclass, confrelid::regclass
-  FROM pg_constraint WHERE conname ~ '^fkey\_\d+$' ORDER BY conname;
+  FROM pg_constraint
+  WHERE connamespace = (SELECT oid FROM pg_namespace WHERE nspname='undistribute_table_cascade') AND
+        conname ~ '^fkey\_\d+$'
+  ORDER BY conname;
 
   SELECT COUNT(*)=0 FROM pg_dist_partition, pg_tables
   WHERE tablename=logicalrelid::regclass::text AND
@@ -126,7 +133,8 @@ BEGIN;
   -- show that we preserve foreign keys on partitions too
   SELECT conname, conrelid::regclass, confrelid::regclass
   FROM pg_constraint
-  WHERE conname = 'fkey_8' OR conname = 'fkey_9'
+  WHERE connamespace = (SELECT oid FROM pg_namespace WHERE nspname='undistribute_table_cascade') AND
+        conname = 'fkey_8' OR conname = 'fkey_9'
   ORDER BY 1,2,3;
 ROLLBACK;
 
