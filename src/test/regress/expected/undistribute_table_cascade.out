@@ -92,7 +92,9 @@ BEGIN;
  sequential
 (1 row)
 
-  SELECT COUNT(*)=7 FROM pg_constraint WHERE conname ~ '^fkey\_\d+$';
+  SELECT COUNT(*)=7 FROM pg_constraint
+  WHERE connamespace = (SELECT oid FROM pg_namespace WHERE nspname='undistribute_table_cascade') AND
+        conname ~ '^fkey\_\d+$';
  ?column?
 ---------------------------------------------------------------------
  t
@@ -114,7 +116,9 @@ BEGIN;
 
 (1 row)
 
-  SELECT COUNT(*)=7 FROM pg_constraint WHERE conname ~ '^fkey\_\d+$';
+  SELECT COUNT(*)=7 FROM pg_constraint
+  WHERE connamespace = (SELECT oid FROM pg_namespace WHERE nspname='undistribute_table_cascade') AND
+        conname ~ '^fkey\_\d+$';
  ?column?
 ---------------------------------------------------------------------
  t
@@ -138,7 +142,10 @@ BEGIN;
 
   -- print foreign keys only in one of xact blocks not to make tests too verbose
   SELECT conname, conrelid::regclass, confrelid::regclass
-  FROM pg_constraint WHERE conname ~ '^fkey\_\d+$' ORDER BY conname;
+  FROM pg_constraint
+  WHERE connamespace = (SELECT oid FROM pg_namespace WHERE nspname='undistribute_table_cascade') AND
+        conname ~ '^fkey\_\d+$'
+  ORDER BY conname;
  conname |      conrelid       |      confrelid
 ---------------------------------------------------------------------
  fkey_1  | distributed_table_3 | distributed_table_2
@@ -236,7 +243,8 @@ BEGIN;
   -- show that we preserve foreign keys on partitions too
   SELECT conname, conrelid::regclass, confrelid::regclass
   FROM pg_constraint
-  WHERE conname = 'fkey_8' OR conname = 'fkey_9'
+  WHERE connamespace = (SELECT oid FROM pg_namespace WHERE nspname='undistribute_table_cascade') AND
+        conname = 'fkey_8' OR conname = 'fkey_9'
   ORDER BY 1,2,3;
  conname |          conrelid           |     confrelid
 ---------------------------------------------------------------------
