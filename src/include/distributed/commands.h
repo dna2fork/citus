@@ -406,7 +406,6 @@ extern void CreateCitusLocalTable(Oid relationId, bool cascade);
 extern void ExecuteCitusTableFunctionCascade(Oid relationId, LOCKMODE relLockMode,
 											 ExecuteCitusTableFunctionFlag
 											 executeCitusTableFunctionFlag);
-extern void DropRelationForeignKeys(Oid relationId);
 extern void ExecuteAndLogDDLCommandList(List *ddlCommandList);
 extern void ExecuteAndLogDDLCommand(const char *commandString);
 

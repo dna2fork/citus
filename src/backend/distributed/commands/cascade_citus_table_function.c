@@ -35,6 +35,7 @@ static void LockRelationsWithLockMode(List *relationIdList, LOCKMODE lockMode);
 static List * FilterNonPartitionRelationIds(List *relationIdList);
 static List * GetFKeyCreationCommandsForRelationIdList(List *relationIdList);
 static void DropRelationIdListForeignKeys(List *relationIdList);
+static void DropRelationForeignKeys(Oid relationId);
 static List * GetRelationDropFkeyCommands(Oid relationId);
 static char * GetDropFkeyCascadeCommand(Oid relationId, Oid foreignKeyId);
 static void ExecuteCitusTableFunctionForRelationIdList(List *relationIdList,
@@ -194,7 +195,7 @@ DropRelationIdListForeignKeys(List *relationIdList)
  * DropRelationForeignKeys drops foreign keys where the relation with
  * relationId is the referencing relation.
  */
-void
+static void
 DropRelationForeignKeys(Oid relationId)
 {
 	List *dropFkeyCascadeCommandList = GetRelationDropFkeyCommands(relationId);
