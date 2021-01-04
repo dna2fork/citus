@@ -373,6 +373,28 @@ multi_ProcessUtility(PlannedStmt *pstmt,
 		PreprocessTruncateStatement((TruncateStmt *) parsetree);
 	}
 
+	bool oldEnableDDLPropagation = EnableDDLPropagation;
+	if (IsA(parsetree, CreateStmt))
+	{
+		/*
+		 * Starting from pg13, postgres started to execute ALTER TABLE commands
+		 * to define some set of objects implied by CREATE TABLE commands such
+		 * as foreign keys and indexes. Also, we don't have any specific logic
+		 * for CREATE TABLE commands except if relation we just defined would
+		 * have a foreign key from/to a reference or citus local table.
+		 *
+		 * Before pg13, we already process such foreign keys at
+		 * ProcessForeignKeysForTableCreation. In that function, we drop foreign
+		 * keys and redefine them to escape many ddl limitations of citus such as
+		 * not supporting constraints without names.
+		 *
+		 * However starting from pg13, this logic wouldn't work due to postgres
+		 * executing ALTER TABLE commands before us. For this reason, we should
+		 * disable ddl propagation here.
+		 */
+		EnableDDLPropagation = false;
+	}
+
 	/* only generate worker DDLJobs if propagation is enabled */
 	const DistributeObjectOps *ops = NULL;
 	if (EnableDDLPropagation)
@@ -538,6 +560,12 @@ multi_ProcessUtility(PlannedStmt *pstmt,
 
 	if (IsA(parsetree, CreateStmt))
 	{
+		/*
+		 * We explicitly disable ddl propagation for CreateStmt before
+		 * preprocess, restore it here.
+		 */
+		EnableDDLPropagation = oldEnableDDLPropagation;
+
 		CreateStmt *createStatement = (CreateStmt *) parsetree;
 
 		PostprocessCreateTableStmt(createStatement, queryString);
