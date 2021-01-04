@@ -3,13 +3,12 @@
 setup
 {
     CREATE TABLE ref_table_1(id int PRIMARY KEY, value int);
-	SELECT create_reference_table('ref_table_1');
+    CREATE TABLE ref_table_2(id int PRIMARY KEY, value int);
+    CREATE TABLE ref_table_3(id int PRIMARY KEY, value int);
 
-    CREATE TABLE ref_table_2(id int PRIMARY KEY, value int REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE);
-	SELECT create_reference_table('ref_table_2');
-
-    CREATE TABLE ref_table_3(id int PRIMARY KEY, value int REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE);
-	SELECT create_reference_table('ref_table_3');
+    SELECT create_reference_table('ref_table_1');
+    SELECT create_reference_table('ref_table_2');
+    SELECT create_reference_table('ref_table_3');
 
     INSERT INTO ref_table_1 VALUES (1, 1), (3, 3), (5, 5);
     INSERT INTO ref_table_2 SELECT * FROM ref_table_1;
@@ -23,6 +22,16 @@ teardown
 }
 
 session "s1"
+
+step "s1-define-fkey-2-1"
+{
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+}
+
+step "s1-define-fkey-3-2"
+{
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+}
 
 step "s1-start-session-level-connection"
 {
@@ -114,17 +123,17 @@ step "s2-stop-connection"
 }
 
 // Case 1. UPDATE/DELETE ref_table_1 should only lock its own shard in Exclusive mode.
-permutation "s2-start-session-level-connection" "s2-begin-on-worker" "s2-update-table-1" "s1-start-session-level-connection"  "s1-view-locks" "s2-rollback-worker" "s1-view-locks" "s1-stop-connection" "s2-stop-connection"
-permutation "s2-start-session-level-connection" "s2-begin-on-worker" "s2-delete-table-1" "s1-start-session-level-connection"  "s1-view-locks" "s2-rollback-worker" "s1-view-locks" "s1-stop-connection" "s2-stop-connection"
+permutation "s1-define-fkey-2-1" "s1-define-fkey-3-2" "s2-start-session-level-connection" "s2-begin-on-worker" "s2-update-table-1" "s1-start-session-level-connection"  "s1-view-locks" "s2-rollback-worker" "s1-view-locks" "s1-stop-connection" "s2-stop-connection"
+permutation "s1-define-fkey-2-1" "s1-define-fkey-3-2" "s2-start-session-level-connection" "s2-begin-on-worker" "s2-delete-table-1" "s1-start-session-level-connection"  "s1-view-locks" "s2-rollback-worker" "s1-view-locks" "s1-stop-connection" "s2-stop-connection"
 // Case 2. Modifying ref_table_2 should also lock ref_table_1 shard in Exclusive mode.
-permutation "s2-start-session-level-connection" "s2-begin-on-worker" "s2-update-table-2" "s1-start-session-level-connection"  "s1-view-locks" "s2-rollback-worker" "s1-view-locks" "s1-stop-connection" "s2-stop-connection"
-permutation "s2-start-session-level-connection" "s2-begin-on-worker" "s2-delete-table-2" "s1-start-session-level-connection"  "s1-view-locks" "s2-rollback-worker" "s1-view-locks" "s1-stop-connection" "s2-stop-connection"
+permutation "s1-define-fkey-2-1" "s1-define-fkey-3-2" "s2-start-session-level-connection" "s2-begin-on-worker" "s2-update-table-2" "s1-start-session-level-connection"  "s1-view-locks" "s2-rollback-worker" "s1-view-locks" "s1-stop-connection" "s2-stop-connection"
+permutation "s1-define-fkey-2-1" "s1-define-fkey-3-2" "s2-start-session-level-connection" "s2-begin-on-worker" "s2-delete-table-2" "s1-start-session-level-connection"  "s1-view-locks" "s2-rollback-worker" "s1-view-locks" "s1-stop-connection" "s2-stop-connection"
 // Case 3. Modifying ref_table_3 should also lock ref_table_1 and ref_table_2 shards in Exclusive mode.
-permutation "s2-start-session-level-connection" "s2-begin-on-worker" "s2-update-table-3" "s1-start-session-level-connection"  "s1-view-locks" "s2-rollback-worker" "s1-view-locks" "s1-stop-connection" "s2-stop-connection"
-permutation "s2-start-session-level-connection" "s2-begin-on-worker" "s2-delete-table-3" "s1-start-session-level-connection"  "s1-view-locks" "s2-rollback-worker" "s1-view-locks" "s1-stop-connection" "s2-stop-connection"
+permutation "s1-define-fkey-2-1" "s1-define-fkey-3-2" "s2-start-session-level-connection" "s2-begin-on-worker" "s2-update-table-3" "s1-start-session-level-connection"  "s1-view-locks" "s2-rollback-worker" "s1-view-locks" "s1-stop-connection" "s2-stop-connection"
+permutation "s1-define-fkey-2-1" "s1-define-fkey-3-2" "s2-start-session-level-connection" "s2-begin-on-worker" "s2-delete-table-3" "s1-start-session-level-connection"  "s1-view-locks" "s2-rollback-worker" "s1-view-locks" "s1-stop-connection" "s2-stop-connection"
 // Case 4. Inserting into ref_table_1 should only lock its own shard in RowExclusive mode.
-permutation "s2-start-session-level-connection" "s2-begin-on-worker" "s2-insert-table-1" "s1-start-session-level-connection"  "s1-view-locks" "s2-rollback-worker" "s1-view-locks" "s1-stop-connection" "s2-stop-connection"
+permutation "s1-define-fkey-2-1" "s1-define-fkey-3-2" "s2-start-session-level-connection" "s2-begin-on-worker" "s2-insert-table-1" "s1-start-session-level-connection"  "s1-view-locks" "s2-rollback-worker" "s1-view-locks" "s1-stop-connection" "s2-stop-connection"
 // Case 5. Modifying ref_table_2 should also lock ref_table_1 in RowExclusive mode.
-permutation "s2-start-session-level-connection" "s2-begin-on-worker" "s2-insert-table-2" "s1-start-session-level-connection"  "s1-view-locks" "s2-rollback-worker" "s1-view-locks" "s1-stop-connection" "s2-stop-connection"
+permutation "s1-define-fkey-2-1" "s1-define-fkey-3-2" "s2-start-session-level-connection" "s2-begin-on-worker" "s2-insert-table-2" "s1-start-session-level-connection"  "s1-view-locks" "s2-rollback-worker" "s1-view-locks" "s1-stop-connection" "s2-stop-connection"
 // Case 6. Modifying ref_table_2 should also lock ref_table_1 in RowExclusive mode.
-permutation "s2-start-session-level-connection" "s2-begin-on-worker" "s2-insert-table-3" "s1-start-session-level-connection"  "s1-view-locks" "s2-rollback-worker" "s1-view-locks" "s1-stop-connection" "s2-stop-connection"
+permutation "s1-define-fkey-2-1" "s1-define-fkey-3-2" "s2-start-session-level-connection" "s2-begin-on-worker" "s2-insert-table-3" "s1-start-session-level-connection"  "s1-view-locks" "s2-rollback-worker" "s1-view-locks" "s1-stop-connection" "s2-stop-connection"
