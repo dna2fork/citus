@@ -48,6 +48,7 @@ typedef bool (*AlterTableCommandFunc)(AlterTableCmd *, Oid);
 
 
 /* Local functions forward declarations for unsupported command checks */
+static void PostprocessCreateTableStmtForeignKeys(CreateStmt *createStatement);
 static void PostprocessCreateTableStmtPartitionOf(CreateStmt *createStatement,
 												  const char *queryString);
 static bool AlterTableDefinesFKeyBetweenPostgresAndNonDistTable(
@@ -178,9 +179,9 @@ PreprocessDropTableStmt(Node *node, const char *queryString)
 
 
 /*
- * PostprocessCreateTableStmt takes CreateStmt object as a parameter and errors
- * out if it creates a table with a foreign key that references to a citus local
- * table if pg version is older than 13 (see comment in function).
+ * PostprocessCreateTableStmt takes CreateStmt object as a parameter and
+ * processes foreign keys on relation via PostprocessCreateTableStmtForeignKeys
+ * function.
  *
  * This function also processes CREATE TABLE ... PARTITION OF statements via
  * PostprocessCreateTableStmtPartitionOf function.
@@ -188,39 +189,55 @@ PreprocessDropTableStmt(Node *node, const char *queryString)
 void
 PostprocessCreateTableStmt(CreateStmt *createStatement, const char *queryString)
 {
-#if PG_VERSION_NUM < PG_VERSION_13
-
-	/*
-	 * Postgres processes foreign key constraints implied by CREATE TABLE
-	 * commands by internally executing ALTER TABLE commands via standard
-	 * process utility starting from PG13. Hence, we will already perform
-	 * unsupported foreign key checks via PreprocessAlterTableStmt function
-	 * in PG13. But for the older version, we need to do unsupported foreign
-	 * key checks here.
-	 */
-
-	/*
-	 * Relation must exist and it is already locked as standard process utility
-	 * is already executed.
-	 */
-	bool missingOk = false;
-	Oid relationId = RangeVarGetRelid(createStatement->relation, NoLock, missingOk);
-	if (HasForeignKeyToCitusLocalTable(relationId))
-	{
-		ErrorOutForFKeyBetweenPostgresAndCitusLocalTable(relationId);
-	}
-
-	/* invalidate foreign key cache if the table involved in any foreign key */
-	if ((TableReferenced(relationId) || TableReferencing(relationId)))
-	{
-		MarkInvalidateForeignKeyGraph();
-	}
-#endif
+	PostprocessCreateTableStmtForeignKeys(createStatement);
 
 	if (createStatement->inhRelations != NIL && createStatement->partbound != NULL)
 	{
 		/* process CREATE TABLE ... PARTITION OF command */
 		PostprocessCreateTableStmtPartitionOf(createStatement, queryString);
+	}
+}
+
+
+/*
+ * PostprocessCreateTableStmtForeignKeys drops ands re-defines foreign keys
+ * defined by given CREATE TABLE command if command defined any foreign to
+ * reference or citus local tables.
+ */
+static void
+PostprocessCreateTableStmtForeignKeys(CreateStmt *createStatement)
+{
+	RangeVar *relation = createStatement->relation;
+
+	/*
+	 * Relation must exists and locked as standard process utility is already
+	 * executed.
+	 */
+	bool missingOk = false;
+	Oid relationId = RangeVarGetRelid(relation, NoLock, missingOk);
+
+	if (!(TableReferenced(relationId) || TableReferencing(relationId)))
+	{
+		return;
+	}
+
+	MarkInvalidateForeignKeyGraph();
+
+	List *nonDistTableForeignKeyIdList =
+		GetForeignKeyOids(relationId, INCLUDE_REFERENCING_CONSTRAINTS |
+						  INCLUDE_CITUS_LOCAL_TABLES |
+						  INCLUDE_REFERENCE_TABLES);
+	bool hasForeignKeyToNonDistTable = list_length(nonDistTableForeignKeyIdList) != 0;
+	if (hasForeignKeyToNonDistTable)
+	{
+		/*
+		 * Drop and re-define foreign keys so that our ALTER TABLE hook does
+		 * the necessary job.
+		 */
+		List *relationFKeyCreationCommands =
+			GetReferencingForeignConstaintCommands(relationId);
+		DropRelationForeignKeys(relationId);
+		ExecuteAndLogDDLCommandList(relationFKeyCreationCommands);
 	}
 }
 
