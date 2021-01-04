@@ -1,14 +1,20 @@
 Parsed test spec with 2 sessions
 
-starting permutation: s2-begin s2-update-table-1 s1-begin s1-view-locks s1-rollback s2-rollback s1-view-locks
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s2-begin s2-update-table-1 s1-begin s1-view-locks s1-rollback s2-rollback s1-view-locks
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-update-table-1:
     UPDATE ref_table_1 SET id = 2 WHERE id = 1;
 
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s1-view-locks:
     SELECT mode, count(*)
@@ -35,9 +41,15 @@ step s1-view-locks:
 mode           count
 
 
-starting permutation: s2-begin s2-delete-table-1 s1-view-locks s2-rollback s1-view-locks
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s2-begin s2-delete-table-1 s1-view-locks s2-rollback s1-view-locks
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-delete-table-1:
     DELETE FROM ref_table_1 WHERE id = 1;
@@ -64,9 +76,15 @@ step s1-view-locks:
 mode           count
 
 
-starting permutation: s2-begin s2-update-table-2 s1-view-locks s2-rollback s1-view-locks
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s2-begin s2-update-table-2 s1-view-locks s2-rollback s1-view-locks
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-update-table-2:
     UPDATE ref_table_2 SET id = 2 WHERE id = 1;
@@ -93,9 +111,15 @@ step s1-view-locks:
 mode           count
 
 
-starting permutation: s2-begin s2-delete-table-2 s1-view-locks s2-rollback s1-view-locks
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s2-begin s2-delete-table-2 s1-view-locks s2-rollback s1-view-locks
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-delete-table-2:
     DELETE FROM ref_table_2 WHERE id = 1;
@@ -122,15 +146,21 @@ step s1-view-locks:
 mode           count
 
 
-starting permutation: s2-begin s2-update-table-3 s1-begin s1-view-locks s1-rollback s2-rollback s1-view-locks
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s2-begin s2-update-table-3 s1-begin s1-view-locks s1-rollback s2-rollback s1-view-locks
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-update-table-3:
     UPDATE ref_table_3 SET id = 2 WHERE id = 1;
 
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s1-view-locks:
     SELECT mode, count(*)
@@ -157,15 +187,21 @@ step s1-view-locks:
 mode           count
 
 
-starting permutation: s2-begin s2-delete-table-3 s1-begin s1-view-locks s1-rollback s2-rollback s1-view-locks
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s2-begin s2-delete-table-3 s1-begin s1-view-locks s1-rollback s2-rollback s1-view-locks
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-delete-table-3:
     DELETE FROM ref_table_3 WHERE id = 1;
 
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s1-view-locks:
     SELECT mode, count(*)
@@ -192,9 +228,15 @@ step s1-view-locks:
 mode           count
 
 
-starting permutation: s2-begin s2-insert-table-1 s1-view-locks s2-rollback s1-view-locks
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s2-begin s2-insert-table-1 s1-view-locks s2-rollback s1-view-locks
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-insert-table-1:
     INSERT INTO ref_table_1 VALUES (7, 7);
@@ -221,9 +263,15 @@ step s1-view-locks:
 mode           count
 
 
-starting permutation: s2-begin s2-insert-table-2 s1-view-locks s2-rollback s1-view-locks
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s2-begin s2-insert-table-2 s1-view-locks s2-rollback s1-view-locks
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-insert-table-2:
     INSERT INTO ref_table_2 VALUES (7, 5);
@@ -250,9 +298,15 @@ step s1-view-locks:
 mode           count
 
 
-starting permutation: s2-begin s2-insert-table-3 s1-view-locks s2-rollback s1-view-locks
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s2-begin s2-insert-table-3 s1-view-locks s2-rollback s1-view-locks
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-insert-table-3:
     INSERT INTO ref_table_3 VALUES (7, 5);
@@ -279,12 +333,18 @@ step s1-view-locks:
 mode           count
 
 
-starting permutation: s1-begin s2-begin s2-update-table-1 s1-delete-table-2 s2-commit s1-commit s1-select-table-2
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s1-begin s2-begin s2-update-table-1 s1-delete-table-2 s2-commit s1-commit s1-select-table-2
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-update-table-1:
     UPDATE ref_table_1 SET id = 2 WHERE id = 1;
@@ -307,12 +367,18 @@ id             value
 3              3
 5              5
 
-starting permutation: s1-begin s2-begin s2-update-table-1 s1-insert-table-2 s2-commit s1-commit s1-select-table-2
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s1-begin s2-begin s2-update-table-1 s1-insert-table-2 s2-commit s1-commit s1-select-table-2
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-update-table-1:
     UPDATE ref_table_1 SET id = 2 WHERE id = 1;
@@ -337,12 +403,18 @@ id             value
 5              5
 7              2
 
-starting permutation: s1-begin s2-begin s2-update-table-1 s1-update-table-2 s2-commit s1-commit s1-select-table-2
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s1-begin s2-begin s2-update-table-1 s1-update-table-2 s2-commit s1-commit s1-select-table-2
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-update-table-1:
     UPDATE ref_table_1 SET id = 2 WHERE id = 1;
@@ -366,12 +438,18 @@ id             value
 3              3
 5              5
 
-starting permutation: s1-begin s2-begin s2-delete-table-1 s1-delete-table-2 s2-commit s1-commit s1-select-table-2
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s1-begin s2-begin s2-delete-table-1 s1-delete-table-2 s2-commit s1-commit s1-select-table-2
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-delete-table-1:
     DELETE FROM ref_table_1 WHERE id = 1;
@@ -394,12 +472,18 @@ id             value
 3              3
 5              5
 
-starting permutation: s1-begin s2-begin s2-delete-table-1 s1-insert-table-2 s2-commit s1-commit s1-select-table-2
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s1-begin s2-begin s2-delete-table-1 s1-insert-table-2 s2-commit s1-commit s1-select-table-2
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-delete-table-1:
     DELETE FROM ref_table_1 WHERE id = 1;
@@ -411,7 +495,7 @@ step s2-commit:
     COMMIT;
 
 step s1-insert-table-2: <... completed>
-error in steps s2-commit s1-insert-table-2: ERROR:  insert or update on table "ref_table_2_xxxxxxx" violates foreign key constraint "ref_table_2_value_fkey_xxxxxxx"
+error in steps s2-commit s1-insert-table-2: ERROR:  insert or update on table "ref_table_2_xxxxxxx" violates foreign key constraint "fkey_xxxxxxx"
 step s1-commit:
     COMMIT;
 
@@ -423,12 +507,18 @@ id             value
 3              3
 5              5
 
-starting permutation: s1-begin s2-begin s2-delete-table-1 s1-update-table-2 s2-commit s1-commit s1-select-table-2
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s1-begin s2-begin s2-delete-table-1 s1-update-table-2 s2-commit s1-commit s1-select-table-2
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-delete-table-1:
     DELETE FROM ref_table_1 WHERE id = 1;
@@ -451,12 +541,18 @@ id             value
 3              3
 5              5
 
-starting permutation: s1-begin s2-begin s2-delete-table-1 s1-delete-table-3 s2-commit s1-commit s1-select-table-3
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s1-begin s2-begin s2-delete-table-1 s1-delete-table-3 s2-commit s1-commit s1-select-table-3
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-delete-table-1:
     DELETE FROM ref_table_1 WHERE id = 1;
@@ -481,12 +577,18 @@ id             value
 3              3
 5              5
 
-starting permutation: s1-begin s2-begin s2-delete-table-1 s1-insert-table-3 s2-commit s1-commit s1-select-table-3
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s1-begin s2-begin s2-delete-table-1 s1-insert-table-3 s2-commit s1-commit s1-select-table-3
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-delete-table-1:
     DELETE FROM ref_table_1 WHERE id = 1;
@@ -498,7 +600,7 @@ step s2-commit:
     COMMIT;
 
 step s1-insert-table-3: <... completed>
-error in steps s2-commit s1-insert-table-3: ERROR:  insert or update on table "ref_table_3_xxxxxxx" violates foreign key constraint "ref_table_3_value_fkey_xxxxxxx"
+error in steps s2-commit s1-insert-table-3: ERROR:  insert or update on table "ref_table_3_xxxxxxx" violates foreign key constraint "fkey_xxxxxxx"
 step s1-commit:
     COMMIT;
 
@@ -510,12 +612,18 @@ id             value
 3              3
 5              5
 
-starting permutation: s1-begin s2-begin s2-delete-table-1 s1-update-table-3 s2-commit s1-commit s1-select-table-3
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s1-begin s2-begin s2-delete-table-1 s1-update-table-3 s2-commit s1-commit s1-select-table-3
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-delete-table-1:
     DELETE FROM ref_table_1 WHERE id = 1;
@@ -540,12 +648,18 @@ id             value
 3              3
 5              5
 
-starting permutation: s1-begin s2-begin s2-insert-table-1 s1-update-table-3 s2-commit s1-commit s1-select-table-3
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s1-begin s2-begin s2-insert-table-1 s1-update-table-3 s2-commit s1-commit s1-select-table-3
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-insert-table-1:
     INSERT INTO ref_table_1 VALUES (7, 7);
@@ -572,12 +686,18 @@ id             value
 3              3
 5              5
 
-starting permutation: s1-begin s2-begin s1-update-table-3 s2-insert-table-1 s1-commit s2-commit s1-select-table-3
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s1-begin s2-begin s1-update-table-3 s2-insert-table-1 s1-commit s2-commit s1-select-table-3
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s1-update-table-3:
     UPDATE ref_table_3 SET id = 2 WHERE value = 1 RETURNING id;
@@ -604,12 +724,18 @@ id             value
 3              3
 5              5
 
-starting permutation: s1-begin s2-begin s2-insert-table-1 s1-update-table-2 s2-commit s1-commit s1-select-table-3
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s1-begin s2-begin s2-insert-table-1 s1-update-table-2 s2-commit s1-commit s1-select-table-3
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-insert-table-1:
     INSERT INTO ref_table_1 VALUES (7, 7);
@@ -633,12 +759,18 @@ id             value
 3              3
 5              5
 
-starting permutation: s1-begin s2-begin s1-update-table-2 s2-insert-table-1 s1-commit s2-commit s1-select-table-3
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s1-begin s2-begin s1-update-table-2 s2-insert-table-1 s1-commit s2-commit s1-select-table-3
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s1-update-table-2:
     UPDATE ref_table_2 SET id = 0 WHERE value = 2;
@@ -662,12 +794,18 @@ id             value
 3              3
 5              5
 
-starting permutation: s1-begin s2-begin s2-insert-table-2 s1-update-table-3 s2-commit s1-commit s1-select-table-3
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s1-begin s2-begin s2-insert-table-2 s1-update-table-3 s2-commit s1-commit s1-select-table-3
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-insert-table-2:
     INSERT INTO ref_table_2 VALUES (7, 5);
@@ -694,12 +832,18 @@ id             value
 3              3
 5              5
 
-starting permutation: s1-begin s2-begin s1-update-table-3 s2-insert-table-2 s1-commit s2-commit s1-select-table-3
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s1-begin s2-begin s1-update-table-3 s2-insert-table-2 s1-commit s2-commit s1-select-table-3
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s1-update-table-3:
     UPDATE ref_table_3 SET id = 2 WHERE value = 1 RETURNING id;
@@ -726,12 +870,18 @@ id             value
 3              3
 5              5
 
-starting permutation: s1-begin s2-begin s2-insert-table-1 s1-select-table-1 s2-commit s1-commit
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s1-begin s2-begin s2-insert-table-1 s1-select-table-1 s2-commit s1-commit
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-insert-table-1:
     INSERT INTO ref_table_1 VALUES (7, 7);
@@ -751,12 +901,18 @@ step s1-commit:
     COMMIT;
 
 
-starting permutation: s1-begin s2-begin s2-insert-table-1 s1-select-table-2 s2-commit s1-commit
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s1-begin s2-begin s2-insert-table-1 s1-select-table-2 s2-commit s1-commit
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-insert-table-1:
     INSERT INTO ref_table_1 VALUES (7, 7);
@@ -776,12 +932,18 @@ step s1-commit:
     COMMIT;
 
 
-starting permutation: s1-begin s2-begin s2-insert-table-1 s1-select-table-3 s2-commit s1-commit
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s1-begin s2-begin s2-insert-table-1 s1-select-table-3 s2-commit s1-commit
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-insert-table-1:
     INSERT INTO ref_table_1 VALUES (7, 7);
@@ -801,12 +963,18 @@ step s1-commit:
     COMMIT;
 
 
-starting permutation: s1-begin s2-begin s2-delete-table-2 s1-select-table-1 s2-commit s1-commit
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s1-begin s2-begin s2-delete-table-2 s1-select-table-1 s2-commit s1-commit
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-delete-table-2:
     DELETE FROM ref_table_2 WHERE id = 1;
@@ -826,12 +994,18 @@ step s1-commit:
     COMMIT;
 
 
-starting permutation: s1-begin s2-begin s2-delete-table-2 s1-select-table-2 s2-commit s1-commit
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s1-begin s2-begin s2-delete-table-2 s1-select-table-2 s2-commit s1-commit
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-delete-table-2:
     DELETE FROM ref_table_2 WHERE id = 1;
@@ -851,12 +1025,18 @@ step s1-commit:
     COMMIT;
 
 
-starting permutation: s1-begin s2-begin s2-delete-table-2 s1-select-table-3 s2-commit s1-commit
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s1-begin s2-begin s2-delete-table-2 s1-select-table-3 s2-commit s1-commit
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-delete-table-2:
     DELETE FROM ref_table_2 WHERE id = 1;
@@ -876,12 +1056,18 @@ step s1-commit:
     COMMIT;
 
 
-starting permutation: s1-begin s2-begin s2-update-table-3 s1-select-table-1 s2-commit s1-commit
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s1-begin s2-begin s2-update-table-3 s1-select-table-1 s2-commit s1-commit
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-update-table-3:
     UPDATE ref_table_3 SET id = 2 WHERE id = 1;
@@ -901,12 +1087,18 @@ step s1-commit:
     COMMIT;
 
 
-starting permutation: s1-begin s2-begin s2-update-table-3 s1-select-table-2 s2-commit s1-commit
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s1-begin s2-begin s2-update-table-3 s1-select-table-2 s2-commit s1-commit
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-update-table-3:
     UPDATE ref_table_3 SET id = 2 WHERE id = 1;
@@ -926,12 +1118,18 @@ step s1-commit:
     COMMIT;
 
 
-starting permutation: s1-begin s2-begin s2-update-table-3 s1-select-table-3 s2-commit s1-commit
+starting permutation: s1-define-fkey-2-1 s1-define-fkey-3-2 s1-begin s2-begin s2-update-table-3 s1-select-table-3 s2-commit s1-commit
+step s1-define-fkey-2-1:
+    ALTER TABLE ref_table_2 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_1(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+step s1-define-fkey-3-2:
+    ALTER TABLE ref_table_3 ADD CONSTRAINT fkey FOREIGN KEY (value) REFERENCES ref_table_2(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 step s1-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-begin:
-	BEGIN;
+ BEGIN;
 
 step s2-update-table-3:
     UPDATE ref_table_3 SET id = 2 WHERE id = 1;
