@@ -276,7 +276,7 @@ SELECT public.generate_partition_information('partition_child_1_schema.child_1')
 ERROR:  "child_1" is not a parent table
 SELECT public.print_partitions('partition_child_1_schema.child_1');
 ERROR:  "child_1" is not a parent table
--- now pring the partitions
+-- now print the partitions
 SELECT public.print_partitions('parent_table');
  print_partitions
 ---------------------------------------------------------------------
