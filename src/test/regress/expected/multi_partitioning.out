@@ -766,24 +766,24 @@ SELECT right(table_name, 7)::int as shardid, * FROM (
 			) q
 		$$) ) w
 ORDER BY 1, 2, 3, 4;
- shardid |            table_name            |            constraint_name             | constraint_type
+ shardid |            table_name            |        constraint_name         | constraint_type
 ---------------------------------------------------------------------
- 1660012 | partitioning_hash_test_1660012   | partitioning_reference_fk_test_1660012 | FOREIGN KEY
- 1660013 | partitioning_hash_test_1660013   | partitioning_reference_fk_test_1660013 | FOREIGN KEY
- 1660014 | partitioning_hash_test_1660014   | partitioning_reference_fk_test_1660014 | FOREIGN KEY
- 1660015 | partitioning_hash_test_1660015   | partitioning_reference_fk_test_1660015 | FOREIGN KEY
- 1660016 | partitioning_hash_test_0_1660016 | partitioning_reference_fk_test_1660012 | FOREIGN KEY
- 1660017 | partitioning_hash_test_0_1660017 | partitioning_reference_fk_test_1660013 | FOREIGN KEY
- 1660018 | partitioning_hash_test_0_1660018 | partitioning_reference_fk_test_1660014 | FOREIGN KEY
- 1660019 | partitioning_hash_test_0_1660019 | partitioning_reference_fk_test_1660015 | FOREIGN KEY
- 1660020 | partitioning_hash_test_1_1660020 | partitioning_reference_fk_test_1660012 | FOREIGN KEY
- 1660021 | partitioning_hash_test_1_1660021 | partitioning_reference_fk_test_1660013 | FOREIGN KEY
- 1660022 | partitioning_hash_test_1_1660022 | partitioning_reference_fk_test_1660014 | FOREIGN KEY
- 1660023 | partitioning_hash_test_1_1660023 | partitioning_reference_fk_test_1660015 | FOREIGN KEY
- 1660032 | partitioning_hash_test_2_1660032 | partitioning_reference_fk_test_1660012 | FOREIGN KEY
- 1660033 | partitioning_hash_test_2_1660033 | partitioning_reference_fk_test_1660013 | FOREIGN KEY
- 1660034 | partitioning_hash_test_2_1660034 | partitioning_reference_fk_test_1660014 | FOREIGN KEY
- 1660035 | partitioning_hash_test_2_1660035 | partitioning_reference_fk_test_1660015 | FOREIGN KEY
+ 1660012 | partitioning_hash_test_1660012   | partitioning_reference_fk_test | FOREIGN KEY
+ 1660013 | partitioning_hash_test_1660013   | partitioning_reference_fk_test | FOREIGN KEY
+ 1660014 | partitioning_hash_test_1660014   | partitioning_reference_fk_test | FOREIGN KEY
+ 1660015 | partitioning_hash_test_1660015   | partitioning_reference_fk_test | FOREIGN KEY
+ 1660016 | partitioning_hash_test_0_1660016 | partitioning_reference_fk_test | FOREIGN KEY
+ 1660017 | partitioning_hash_test_0_1660017 | partitioning_reference_fk_test | FOREIGN KEY
+ 1660018 | partitioning_hash_test_0_1660018 | partitioning_reference_fk_test | FOREIGN KEY
+ 1660019 | partitioning_hash_test_0_1660019 | partitioning_reference_fk_test | FOREIGN KEY
+ 1660020 | partitioning_hash_test_1_1660020 | partitioning_reference_fk_test | FOREIGN KEY
+ 1660021 | partitioning_hash_test_1_1660021 | partitioning_reference_fk_test | FOREIGN KEY
+ 1660022 | partitioning_hash_test_1_1660022 | partitioning_reference_fk_test | FOREIGN KEY
+ 1660023 | partitioning_hash_test_1_1660023 | partitioning_reference_fk_test | FOREIGN KEY
+ 1660032 | partitioning_hash_test_2_1660032 | partitioning_reference_fk_test | FOREIGN KEY
+ 1660033 | partitioning_hash_test_2_1660033 | partitioning_reference_fk_test | FOREIGN KEY
+ 1660034 | partitioning_hash_test_2_1660034 | partitioning_reference_fk_test | FOREIGN KEY
+ 1660035 | partitioning_hash_test_2_1660035 | partitioning_reference_fk_test | FOREIGN KEY
 (16 rows)
 
 DROP TYPE  foreign_key_details;
@@ -1933,7 +1933,7 @@ INSERT INTO partitioning_test_2010 VALUES (1, '2010-02-01');
 -- This should fail because of foreign key constraint violation
 ALTER TABLE partitioning_test ATTACH PARTITION partitioning_test_2010
       FOR VALUES FROM ('2010-01-01') TO ('2011-01-01');
-ERROR:  insert or update on table "partitioning_test_2010_1660191" violates foreign key constraint "partitioning_reference_fkey_1660179"
+ERROR:  insert or update on table "partitioning_test_2010_1660191" violates foreign key constraint "partitioning_reference_fkey"
 DETAIL:  Key (id)=(X) is not present in table "reference_table_1660177".
 CONTEXT:  while executing command on localhost:xxxxx
 -- Truncate, so attaching again won't fail

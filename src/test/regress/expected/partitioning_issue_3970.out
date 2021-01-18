@@ -1,0 +1,162 @@
+-- test cases for #3970
+SET citus.next_shard_id TO 1690000;
+SET citus.shard_count TO 4;
+SET citus.shard_replication_factor TO 1;
+CREATE SCHEMA test_3970;
+SET search_path = test_3970;
+--1. create a partitioned table
+CREATE TABLE part_table (
+    work_ymdt timestamp without time zone NOT NULL,
+    seq bigint NOT NULL,
+    my_seq bigint NOT NULL,
+    work_memo character varying(150),
+    CONSTRAINT work_memo_check CHECK ((octet_length((work_memo)::text) <= 150))
+)
+PARTITION BY RANGE (work_ymdt);
+--2. perform create_distributed_table
+SELECT create_distributed_table('part_table', 'seq');
+ create_distributed_table
+---------------------------------------------------------------------
+
+(1 row)
+
+--3. add a partition
+CREATE TABLE part_table_p202008 PARTITION OF part_table FOR VALUES FROM ('2020-08-01 00:00:00') TO ('2020-09-01 00:00:00');
+--4. add a check constraint
+ALTER TABLE part_table ADD CONSTRAINT my_seq CHECK (my_seq > 0);
+--5. add a partition
+CREATE TABLE part_table_p202009 PARTITION OF part_table FOR VALUES FROM ('2020-09-01 00:00:00') TO ('2020-10-01 00:00:00');
+-- check the constraint names on the coordinator node
+\d+ test_3970.part_table*
+                                     Table "test_3970.part_table"
+  Column   |            Type             | Collation | Nullable | Default | Storage  | Stats target | Description
+---------------------------------------------------------------------
+ work_ymdt | timestamp without time zone |           | not null |         | plain    |              |
+ seq       | bigint                      |           | not null |         | plain    |              |
+ my_seq    | bigint                      |           | not null |         | plain    |              |
+ work_memo | character varying(150)      |           |          |         | extended |              |
+Partition key: RANGE (work_ymdt)
+Check constraints:
+    "my_seq" CHECK (my_seq > 0)
+    "work_memo_check" CHECK (octet_length(work_memo::text) <= 150)
+Partitions: part_table_p202008 FOR VALUES FROM ('Sat Aug 01 00:00:00 2020') TO ('Tue Sep 01 00:00:00 2020'),
+            part_table_p202009 FOR VALUES FROM ('Tue Sep 01 00:00:00 2020') TO ('Thu Oct 01 00:00:00 2020')
+
+                                       Table "test_3970.part_table_p202008"
+  Column   |            Type             | Collation | Nullable | Default | Storage  | Stats target | Description
+---------------------------------------------------------------------
+ work_ymdt | timestamp without time zone |           | not null |         | plain    |              |
+ seq       | bigint                      |           | not null |         | plain    |              |
+ my_seq    | bigint                      |           | not null |         | plain    |              |
+ work_memo | character varying(150)      |           |          |         | extended |              |
+Partition of: part_table FOR VALUES FROM ('Sat Aug 01 00:00:00 2020') TO ('Tue Sep 01 00:00:00 2020')
+Partition constraint: ((work_ymdt IS NOT NULL) AND (work_ymdt >= 'Sat Aug 01 00:00:00 2020'::timestamp without time zone) AND (work_ymdt < 'Tue Sep 01 00:00:00 2020'::timestamp without time zone))
+Check constraints:
+    "my_seq" CHECK (my_seq > 0)
+    "work_memo_check" CHECK (octet_length(work_memo::text) <= 150)
+
+                                       Table "test_3970.part_table_p202009"
+  Column   |            Type             | Collation | Nullable | Default | Storage  | Stats target | Description
+---------------------------------------------------------------------
+ work_ymdt | timestamp without time zone |           | not null |         | plain    |              |
+ seq       | bigint                      |           | not null |         | plain    |              |
+ my_seq    | bigint                      |           | not null |         | plain    |              |
+ work_memo | character varying(150)      |           |          |         | extended |              |
+Partition of: part_table FOR VALUES FROM ('Tue Sep 01 00:00:00 2020') TO ('Thu Oct 01 00:00:00 2020')
+Partition constraint: ((work_ymdt IS NOT NULL) AND (work_ymdt >= 'Tue Sep 01 00:00:00 2020'::timestamp without time zone) AND (work_ymdt < 'Thu Oct 01 00:00:00 2020'::timestamp without time zone))
+Check constraints:
+    "my_seq" CHECK (my_seq > 0)
+    "work_memo_check" CHECK (octet_length(work_memo::text) <= 150)
+
+-- check the constraint names on the worker node
+-- See that we append shardid to constraints created by an
+-- ALTER TABLE .. ADD CONSTRAINT, whereas we leave the constraint name as is if
+-- the constraint existed before we distributed the table.
+\c - - - :worker_1_port
+\d+ test_3970.part_table*
+                                 Table "test_3970.part_table_1690000"
+  Column   |            Type             | Collation | Nullable | Default | Storage  | Stats target | Description
+---------------------------------------------------------------------
+ work_ymdt | timestamp without time zone |           | not null |         | plain    |              |
+ seq       | bigint                      |           | not null |         | plain    |              |
+ my_seq    | bigint                      |           | not null |         | plain    |              |
+ work_memo | character varying(150)      |           |          |         | extended |              |
+Partition key: RANGE (work_ymdt)
+Check constraints:
+    "my_seq" CHECK (my_seq > 0)
+    "work_memo_check" CHECK (octet_length(work_memo::text) <= 150)
+Partitions: test_3970.part_table_p202008_1690004 FOR VALUES FROM ('Sat Aug 01 00:00:00 2020') TO ('Tue Sep 01 00:00:00 2020'),
+            test_3970.part_table_p202009_1690008 FOR VALUES FROM ('Tue Sep 01 00:00:00 2020') TO ('Thu Oct 01 00:00:00 2020')
+
+                                 Table "test_3970.part_table_1690002"
+  Column   |            Type             | Collation | Nullable | Default | Storage  | Stats target | Description
+---------------------------------------------------------------------
+ work_ymdt | timestamp without time zone |           | not null |         | plain    |              |
+ seq       | bigint                      |           | not null |         | plain    |              |
+ my_seq    | bigint                      |           | not null |         | plain    |              |
+ work_memo | character varying(150)      |           |          |         | extended |              |
+Partition key: RANGE (work_ymdt)
+Check constraints:
+    "my_seq" CHECK (my_seq > 0)
+    "work_memo_check" CHECK (octet_length(work_memo::text) <= 150)
+Partitions: test_3970.part_table_p202008_1690006 FOR VALUES FROM ('Sat Aug 01 00:00:00 2020') TO ('Tue Sep 01 00:00:00 2020'),
+            test_3970.part_table_p202009_1690010 FOR VALUES FROM ('Tue Sep 01 00:00:00 2020') TO ('Thu Oct 01 00:00:00 2020')
+
+                                   Table "test_3970.part_table_p202008_1690004"
+  Column   |            Type             | Collation | Nullable | Default | Storage  | Stats target | Description
+---------------------------------------------------------------------
+ work_ymdt | timestamp without time zone |           | not null |         | plain    |              |
+ seq       | bigint                      |           | not null |         | plain    |              |
+ my_seq    | bigint                      |           | not null |         | plain    |              |
+ work_memo | character varying(150)      |           |          |         | extended |              |
+Partition of: test_3970.part_table_1690000 FOR VALUES FROM ('Sat Aug 01 00:00:00 2020') TO ('Tue Sep 01 00:00:00 2020')
+Partition constraint: ((work_ymdt IS NOT NULL) AND (work_ymdt >= 'Sat Aug 01 00:00:00 2020'::timestamp without time zone) AND (work_ymdt < 'Tue Sep 01 00:00:00 2020'::timestamp without time zone))
+Check constraints:
+    "my_seq" CHECK (my_seq > 0)
+    "work_memo_check" CHECK (octet_length(work_memo::text) <= 150)
+
+                                   Table "test_3970.part_table_p202008_1690006"
+  Column   |            Type             | Collation | Nullable | Default | Storage  | Stats target | Description
+---------------------------------------------------------------------
+ work_ymdt | timestamp without time zone |           | not null |         | plain    |              |
+ seq       | bigint                      |           | not null |         | plain    |              |
+ my_seq    | bigint                      |           | not null |         | plain    |              |
+ work_memo | character varying(150)      |           |          |         | extended |              |
+Partition of: test_3970.part_table_1690002 FOR VALUES FROM ('Sat Aug 01 00:00:00 2020') TO ('Tue Sep 01 00:00:00 2020')
+Partition constraint: ((work_ymdt IS NOT NULL) AND (work_ymdt >= 'Sat Aug 01 00:00:00 2020'::timestamp without time zone) AND (work_ymdt < 'Tue Sep 01 00:00:00 2020'::timestamp without time zone))
+Check constraints:
+    "my_seq" CHECK (my_seq > 0)
+    "work_memo_check" CHECK (octet_length(work_memo::text) <= 150)
+
+                                   Table "test_3970.part_table_p202009_1690008"
+  Column   |            Type             | Collation | Nullable | Default | Storage  | Stats target | Description
+---------------------------------------------------------------------
+ work_ymdt | timestamp without time zone |           | not null |         | plain    |              |
+ seq       | bigint                      |           | not null |         | plain    |              |
+ my_seq    | bigint                      |           | not null |         | plain    |              |
+ work_memo | character varying(150)      |           |          |         | extended |              |
+Partition of: test_3970.part_table_1690000 FOR VALUES FROM ('Tue Sep 01 00:00:00 2020') TO ('Thu Oct 01 00:00:00 2020')
+Partition constraint: ((work_ymdt IS NOT NULL) AND (work_ymdt >= 'Tue Sep 01 00:00:00 2020'::timestamp without time zone) AND (work_ymdt < 'Thu Oct 01 00:00:00 2020'::timestamp without time zone))
+Check constraints:
+    "my_seq" CHECK (my_seq > 0)
+    "work_memo_check" CHECK (octet_length(work_memo::text) <= 150)
+
+                                   Table "test_3970.part_table_p202009_1690010"
+  Column   |            Type             | Collation | Nullable | Default | Storage  | Stats target | Description
+---------------------------------------------------------------------
+ work_ymdt | timestamp without time zone |           | not null |         | plain    |              |
+ seq       | bigint                      |           | not null |         | plain    |              |
+ my_seq    | bigint                      |           | not null |         | plain    |              |
+ work_memo | character varying(150)      |           |          |         | extended |              |
+Partition of: test_3970.part_table_1690002 FOR VALUES FROM ('Tue Sep 01 00:00:00 2020') TO ('Thu Oct 01 00:00:00 2020')
+Partition constraint: ((work_ymdt IS NOT NULL) AND (work_ymdt >= 'Tue Sep 01 00:00:00 2020'::timestamp without time zone) AND (work_ymdt < 'Thu Oct 01 00:00:00 2020'::timestamp without time zone))
+Check constraints:
+    "my_seq" CHECK (my_seq > 0)
+    "work_memo_check" CHECK (octet_length(work_memo::text) <= 150)
+
+\c - - - :master_port
+SET search_path = test_3970;
+-- verify that we can drop the constraints on partitioned tables
+ALTER TABLE part_table DROP CONSTRAINT my_seq;
+DROP TABLE part_table CASCADE;
+DROP SCHEMA test_3970;

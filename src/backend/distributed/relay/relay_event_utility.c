@@ -29,10 +29,12 @@
 #include "catalog/namespace.h"
 #include "catalog/pg_class.h"
 #include "catalog/pg_constraint.h"
+#include "common/string.h"
 #include "distributed/citus_safe_lib.h"
 #include "distributed/commands.h"
 #include "distributed/listutils.h"
 #include "distributed/metadata_cache.h"
+#include "distributed/multi_partitioning_utils.h"
 #include "distributed/relay_utility.h"
 #include "distributed/version_compat.h"
 #include "lib/stringinfo.h"
@@ -151,6 +153,10 @@ RelayEventExtendNames(Node *parseTree, char *schemaName, uint64 shardId)
 				{
 					Constraint *constraint = (Constraint *) command->def;
 					char **constraintName = &(constraint->conname);
+					const bool missingOk = false;
+					relationId = RangeVarGetRelid(alterTableStmt->relation,
+												  AccessShareLock,
+												  missingOk);
 
 					if (constraint->contype == CONSTR_PRIMARY && constraint->indexname)
 					{
@@ -158,7 +164,13 @@ RelayEventExtendNames(Node *parseTree, char *schemaName, uint64 shardId)
 						AppendShardIdToName(indexName, shardId);
 					}
 
-					AppendShardIdToName(constraintName, shardId);
+					/* append shardId to constraint names when necessary */
+					if (!PartitionedTable(relationId) ||
+						constraint->contype == CONSTR_PRIMARY ||
+						constraint->contype == CONSTR_UNIQUE)
+					{
+						AppendShardIdToName(constraintName, shardId);
+					}
 				}
 				else if (command->subtype == AT_DropConstraint ||
 						 command->subtype == AT_ValidateConstraint)
