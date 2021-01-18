@@ -909,6 +909,19 @@ AppendShardIdToName(char **name, uint64 shardId)
 
 
 /*
+ * NameHasShardIdSuffix checks if a given name has a shardId suffix precedded by an underscore.
+ */
+bool
+NameHasShardIdSuffix(char *name, int32 shardId)
+{
+	StringInfo shardIdAppendix = makeStringInfo();
+	appendStringInfo(shardIdAppendix, "_%d", shardId);
+
+	return pg_str_endswith(name, shardIdAppendix->data);
+}
+
+
+/*
  * shard_name() provides a PG function interface to AppendShardNameToId above.
  * Returns the name of a shard as a quoted schema-qualified identifier.
  */

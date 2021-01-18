@@ -490,9 +490,11 @@ SELECT * FROM print_extension_changes();
                                                                                  | function citus_update_shard_statistics(bigint)
                                                                                  | function citus_update_table_statistics(regclass)
                                                                                  | function create_citus_local_table(regclass,boolean)
+                                                                                 | function fix_partition_constraints(regclass)
                                                                                  | function time_partition_range(regclass)
                                                                                  | function undistribute_table(regclass,boolean)
                                                                                  | function worker_change_sequence_dependency(regclass,regclass,regclass)
+                                                                                 | function worker_fix_partition_constraints(regclass,integer)
                                                                                  | schema columnar
                                                                                  | sequence columnar.storageid_seq
                                                                                  | table columnar.columnar_skipnodes
@@ -501,7 +503,7 @@ SELECT * FROM print_extension_changes();
                                                                                  | view citus_shards
                                                                                  | view citus_tables
                                                                                  | view time_partitions
-(56 rows)
+(58 rows)
 
 DROP TABLE prev_objects, extension_diff;
 -- show running version
