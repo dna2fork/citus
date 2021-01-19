@@ -187,6 +187,7 @@ extern List * GetForeignConstraintToReferenceTablesCommands(Oid relationId);
 extern List * GetForeignConstraintToDistributedTablesCommands(Oid relationId);
 extern List * GetForeignConstraintFromDistributedTablesCommands(Oid relationId);
 extern List * GetForeignConstraintCommandsInternal(Oid relationId, int flags);
+extern bool HasForeignKeyWithLocalTable(Oid relationId);
 extern bool HasForeignKeyToCitusLocalTable(Oid relationId);
 extern bool HasForeignKeyToReferenceTable(Oid relationOid);
 extern bool TableReferenced(Oid relationOid);
@@ -359,6 +360,7 @@ extern List * PreprocessDropTableStmt(Node *stmt, const char *queryString,
 									  ProcessUtilityContext processUtilityContext);
 extern void PostprocessCreateTableStmt(CreateStmt *createStatement,
 									   const char *queryString);
+extern bool ShouldEnableLocalReferenceForeignKeys(void);
 extern List * PostprocessAlterTableStmtAttachPartition(
 	AlterTableStmt *alterTableStatement,
 	const char *queryString);

@@ -366,6 +366,24 @@ CreateDistributedTable(Oid relationId, Var *distributionColumn, char distributio
 	}
 
 	/*
+	 * To support foreign keys between reference tables and local tables,
+	 * we drop & re-define foreign keys at the end of this function so
+	 * that ALTER TABLE hook does the necessary job, which means converting
+	 * local tables to citus local tables to properly support such foreign
+	 * keys.
+	 */
+	else if (distributionMethod == DISTRIBUTE_BY_NONE &&
+			 ShouldEnableLocalReferenceForeignKeys() &&
+			 HasForeignKeyWithLocalTable(relationId))
+	{
+		/* store foreign key creation commands that relation is involved */
+		droppedFKeyCreationCommands =
+			GetFKeyCreationCommandsRelationInvolvedWithTableType(relationId,
+																 INCLUDE_LOCAL_TABLES);
+		DropFKeysRelationInvolvedWithTableType(relationId, INCLUDE_LOCAL_TABLES);
+	}
+
+	/*
 	 * distributed tables might have dependencies on different objects, since we create
 	 * shards for a distributed table via multiple sessions these objects will be created
 	 * via their own connection and committed immediately so they become visible to all
