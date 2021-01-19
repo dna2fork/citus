@@ -90,5 +90,5 @@ CREATE FUNCTION pg_catalog.master_create_worker_shards(table_name text, shard_co
 DROP VIEW pg_catalog.citus_shards CASCADE;
 DROP FUNCTION pg_catalog.citus_shard_sizes(OUT table_name text, OUT size bigint);
 
-DROP FUNCTION fix_partition_constraints(regclass);
-DROP FUNCTION worker_fix_partition_constraints(regclass,int);
+DROP FUNCTION pg_catalog.fix_partition_constraints(regclass);
+DROP FUNCTION pg_catalog.worker_fix_partition_constraints(regclass,int);
