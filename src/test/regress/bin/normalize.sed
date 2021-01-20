@@ -195,4 +195,4 @@ s/relation with OID [0-9]+ does not exist/relation with OID XXXX does not exist/
 s/^storage id: [0-9]+$/storage id: xxxxx/g
 
 # normalize partitioned table shard constraint name errors for upgrade_partition_constraints_(before|after)
-s/^(ERROR:  child table is missing constraint "my_seq)_([0-9])+"/\1_xxxxxx"/g
+s/^(ERROR:  child table is missing constraint "\w+)_([0-9])+"/\1_xxxxxx"/g
