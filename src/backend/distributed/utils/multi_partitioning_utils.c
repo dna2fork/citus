@@ -59,6 +59,12 @@ PG_FUNCTION_INFO_V1(worker_fix_partition_constraints);
 /*
  * fix_partition_constraints fixes the constraint names of partitioned table shards on
  * workers.
+ *
+ * Constraint names for partitioned table shards should have shardId suffixes if and only
+ * if they are unique or foreign key constraints. We mistakenly appended shardIds to
+ * constraint names on ALTER TABLE dist_part_table ADD CONSTRAINT .. queries prior to
+ * Citus 10. fix_partition_constraints determines if this is the case, and renames
+ * constraints back to their original names on shards.
  */
 Datum
 fix_partition_constraints(PG_FUNCTION_ARGS)
