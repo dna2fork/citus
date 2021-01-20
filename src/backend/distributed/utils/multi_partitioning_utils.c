@@ -48,9 +48,9 @@ static char * PartitionBound(Oid partitionId);
 static Relation try_relation_open_nolock(Oid relationId);
 static List * CreateFixPartitionConstraintsTaskList(Oid relationId);
 static List * GetShardIdAppendedConstraintNameList(Oid relationId, int32 shardId);
-static char * GetRenameShardConstraintToOriginalCommand(Oid relationId,
-														char *constraintName, int32
-														shardId);
+static char * RemoveShardIdFromConstraintNameCommand(Oid relationId,
+													 char *constraintName, int32
+													 shardId);
 
 PG_FUNCTION_INFO_V1(fix_partition_constraints);
 PG_FUNCTION_INFO_V1(worker_fix_partition_constraints);
@@ -112,8 +112,8 @@ worker_fix_partition_constraints(PG_FUNCTION_ARGS)
 	foreach_ptr(constraintName, constraintNameList)
 	{
 		char *shardRenameDDLCommand =
-			GetRenameShardConstraintToOriginalCommand(relationId, constraintName,
-													  shardId);
+			RemoveShardIdFromConstraintNameCommand(relationId, constraintName,
+												   shardId);
 		ExecuteAndLogDDLCommand(shardRenameDDLCommand);
 	}
 
@@ -230,12 +230,12 @@ GetShardIdAppendedConstraintNameList(Oid relationId, int32 shardId)
 
 
 /*
- * GetRenameShardConstraintToOriginalCommand creates the command that will remove the
+ * RemoveShardIdFromConstraintNameCommand creates the command that will remove the
  * shardId suffix from a constraint name.
  */
 static char *
-GetRenameShardConstraintToOriginalCommand(Oid relationId, char *constraintName,
-										  int32 shardId)
+RemoveShardIdFromConstraintNameCommand(Oid relationId, char *constraintName,
+									   int32 shardId)
 {
 	char *qualifiedRelationName = generate_qualified_relation_name(relationId);
 	const char *quotedConstraintName = quote_identifier(constraintName);
