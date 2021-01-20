@@ -73,8 +73,8 @@ fix_partition_constraints(PG_FUNCTION_ARGS)
 	}
 	if (!IsCitusTable(relationId))
 	{
-		ereport(ERROR, (errmsg("could not fix partition constraints: "
-							   "relation is not distributed")));
+		ereport(ERROR, (errmsg("fix_partition_constraints can only be called "
+							   "for distributed partitioned tables")));
 	}
 
 	List *taskList = CreateFixPartitionConstraintsTaskList(relationId);
