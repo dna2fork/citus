@@ -51,6 +51,8 @@ static List * GetShardIdAppendedConstraintNameList(Oid relationId, int32 shardId
 static char * RemoveShardIdFromConstraintNameCommand(Oid relationId,
 													 char *constraintName, int32
 													 shardId);
+inline static char * RemoveSuffixFromString(char *string, char *suffix);
+
 
 PG_FUNCTION_INFO_V1(fix_partition_constraints);
 PG_FUNCTION_INFO_V1(worker_fix_partition_constraints);
@@ -243,12 +245,9 @@ RemoveShardIdFromConstraintNameCommand(Oid relationId, char *constraintName,
 	/* create the shardId suffix string */
 	StringInfo shardIdSuffix = makeStringInfo();
 	appendStringInfo(shardIdSuffix, "_%d", shardId);
-	Assert(pg_str_endswith(constraintName, shardIdSuffix->data));
 
 	/* remove the shardId suffix */
-	char *newConstraintName =
-		pnstrdup(constraintName,
-				 strlen(constraintName) - strlen(shardIdSuffix->data));
+	char *newConstraintName = RemoveSuffixFromString(constraintName, shardIdSuffix->data);
 	const char *quotedNewConstraintName = quote_identifier(newConstraintName);
 
 	StringInfo renameCommand = makeStringInfo();
@@ -257,6 +256,19 @@ RemoveShardIdFromConstraintNameCommand(Oid relationId, char *constraintName,
 					 quotedNewConstraintName);
 
 	return renameCommand->data;
+}
+
+
+/*
+ * RemoveSuffixFromString returns a new copy of a string without the supplied suffix.
+ *
+ * It is caller's responsibility to make sure the supplied string ends with the suffix.
+ */
+inline static char *
+RemoveSuffixFromString(char *string, char *suffix)
+{
+	Assert(pg_str_endswith(string, suffix));
+	return pnstrdup(string, strlen(string) - strlen(suffix));
 }
 
 
