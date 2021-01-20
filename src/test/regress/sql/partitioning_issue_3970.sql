@@ -46,6 +46,11 @@ ORDER BY 1,2,3;
 \c - - - :master_port
 SET search_path = test_3970;
 
+-- Add tests for curently unsupported DROP/RENAME commands so that we do not forget about
+-- this edge case when we increase our SQL coverage.
+ALTER TABLE part_table RENAME CONSTRAINT my_seq TO my_seq_check;
+ALTER TABLE part_table ALTER CONSTRAINT my_seq DEFERRABLE;
+
 -- verify that we can drop the constraints on partitioned tables
 ALTER TABLE part_table DROP CONSTRAINT my_seq;
 
