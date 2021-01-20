@@ -69,7 +69,7 @@ fix_partition_constraints(PG_FUNCTION_ARGS)
 	if (!PartitionedTable(relationId))
 	{
 		ereport(ERROR, (errmsg("could not fix partition constraints: "
-							   "relation does not exist or is not parititoned")));
+							   "relation does not exist or is not partitioned")));
 	}
 	if (!IsCitusTable(relationId))
 	{
@@ -98,7 +98,7 @@ worker_fix_partition_constraints(PG_FUNCTION_ARGS)
 	if (!PartitionedTable(relationId))
 	{
 		ereport(ERROR, (errmsg("could not fix partition constraints: "
-							   "relation does not exist or is not parititoned")));
+							   "relation does not exist or is not partitioned")));
 	}
 
 	List *constraintNameList = GetShardIdAppendedConstraintNameList(relationId, shardId);

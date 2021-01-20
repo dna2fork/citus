@@ -909,7 +909,7 @@ AppendShardIdToName(char **name, uint64 shardId)
 
 
 /*
- * NameHasShardIdSuffix checks if a given name has a shardId suffix precedded by an underscore.
+ * NameHasShardIdSuffix checks if a given name has a shardId suffix preceded by an underscore.
  */
 bool
 NameHasShardIdSuffix(char *name, int32 shardId)

@@ -48,7 +48,7 @@ $$
 SELECT count(*) FROM pg_catalog.pg_tables WHERE schemaname='undistribute_table_cascade_mx'
 $$);
 
--- drop parititoned table as create_citus_local_table doesn't support partitioned tables
+-- drop partitioned table as create_citus_local_table doesn't support partitioned tables
 DROP TABLE partitioned_table_1;
 SELECT create_citus_local_table('citus_local_table_1', cascade_via_foreign_keys=>true);
 

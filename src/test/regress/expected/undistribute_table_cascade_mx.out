@@ -85,7 +85,7 @@ $$);
  (localhost,57638,t,0)
 (2 rows)
 
--- drop parititoned table as create_citus_local_table doesn't support partitioned tables
+-- drop partitioned table as create_citus_local_table doesn't support partitioned tables
 DROP TABLE partitioned_table_1;
 SELECT create_citus_local_table('citus_local_table_1', cascade_via_foreign_keys=>true);
  create_citus_local_table
