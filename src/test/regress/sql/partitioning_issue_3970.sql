@@ -12,7 +12,8 @@ CREATE TABLE part_table (
     seq bigint NOT NULL,
     my_seq bigint NOT NULL,
     work_memo character varying(150),
-    CONSTRAINT work_memo_check CHECK ((octet_length((work_memo)::text) <= 150))
+    CONSTRAINT work_memo_check CHECK ((octet_length((work_memo)::text) <= 150)),
+    PRIMARY KEY(seq, work_ymdt)
 )
 PARTITION BY RANGE (work_ymdt);
 
@@ -29,14 +30,18 @@ ALTER TABLE part_table ADD CONSTRAINT my_seq CHECK (my_seq > 0);
 CREATE TABLE part_table_p202009 PARTITION OF part_table FOR VALUES FROM ('2020-09-01 00:00:00') TO ('2020-10-01 00:00:00');
 
 -- check the constraint names on the coordinator node
-\d+ test_3970.part_table*
+SELECT relname, conname, pg_catalog.pg_get_constraintdef(con.oid, true)
+FROM pg_constraint con JOIN pg_class rel ON (rel.oid=con.conrelid)
+WHERE relname LIKE 'part_table%'
+ORDER BY 1,2,3;
 
 -- check the constraint names on the worker node
--- See that we append shardid to constraints created by an
--- ALTER TABLE .. ADD CONSTRAINT, whereas we leave the constraint name as is if
--- the constraint existed before we distributed the table.
+-- verify that only the primary key constraints have shardId suffix
 \c - - - :worker_1_port
-\d+ test_3970.part_table*
+SELECT relname, conname, pg_catalog.pg_get_constraintdef(con.oid, true)
+FROM pg_constraint con JOIN pg_class rel ON (rel.oid=con.conrelid)
+WHERE relname LIKE 'part_table%'
+ORDER BY 1,2,3;
 
 \c - - - :master_port
 SET search_path = test_3970;
