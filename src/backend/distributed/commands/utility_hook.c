@@ -92,7 +92,7 @@ static void IncrementUtilityHookCountersIfNecessary(Node *parsetree);
 static void PostStandardProcessUtility(Node *parsetree);
 static void DecrementUtilityHookCountersIfNecessary(Node *parsetree);
 static bool IsDropSchemaOrDB(Node *parsetree);
-static bool IsDropSchemaOrTable(Node *parsetree);
+static bool DropStmtDropsCitusTable(Node *parsetree);
 static void UndistributeCitusLocalTablesIfNeeded(bool executedDDLJob);
 static bool ShouldUndistributeCitusLocalTables(bool executedDDLJob);
 
@@ -425,6 +425,8 @@ ProcessUtilityInternal(PlannedStmt *pstmt,
 		PreprocessTruncateStatement((TruncateStmt *) parsetree);
 	}
 
+	bool dropsCitusTable = DropStmtDropsCitusTable(parsetree);
+
 	/* only generate worker DDLJobs if propagation is enabled */
 	const DistributeObjectOps *ops = NULL;
 	if (EnableDDLPropagation)
@@ -667,21 +669,18 @@ ProcessUtilityInternal(PlannedStmt *pstmt,
 		CitusHasBeenLoaded();
 	}
 
-	if (list_length(ddlJobs) != 0)
+	if (dropsCitusTable)
 	{
 		return true;
 	}
 
-	if (IsDropSchemaOrTable(parsetree))
+	if (IsA(parsetree, DropStmt) && ((DropStmt *) parsetree)->removeType == OBJECT_SCHEMA)
 	{
-		/*
-		 * TODO: We could specifically check if it is a:
-		 * - DROP TABLE statement that drops a reference or a citus local table
-		 *   that has a foreign key relationship with a postgres table, or a
-		 * - DROP SCHEMA statement that again drops such a citus table
-		 * but this is more easy and the other approach is much more prune to
-		 * deadlocks.
-		 */
+		return true;
+	}
+
+	if (list_length(ddlJobs) != 0)
+	{
 		return true;
 	}
 
@@ -689,12 +688,8 @@ ProcessUtilityInternal(PlannedStmt *pstmt,
 }
 
 
-/*
- * IsDropSchemaOrTable returns true if parsetree represents a DROP SCHEMA
- * or a DROP TABLE statement.
- */
 static bool
-IsDropSchemaOrTable(Node *parsetree)
+DropStmtDropsCitusTable(Node *parsetree)
 {
 	if (!IsA(parsetree, DropStmt))
 	{
@@ -702,8 +697,25 @@ IsDropSchemaOrTable(Node *parsetree)
 	}
 
 	DropStmt *dropStatement = (DropStmt *) parsetree;
-	ObjectType dropType = dropStatement->removeType;
-	return dropType == OBJECT_SCHEMA || dropType == OBJECT_TABLE;
+	if (dropStatement->removeType != OBJECT_TABLE)
+	{
+		return false;
+	}
+
+	List *relationIdentifierList = NULL;
+	foreach_ptr(relationIdentifierList, dropStatement->objects)
+	{
+		RangeVar *relation = makeRangeVarFromNameList(relationIdentifierList);
+
+		/* TODO: comment on params */
+		Oid relationId = RangeVarGetRelid(relation, ExclusiveLock, true);
+		if (IsCitusTable(relationId))
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
 
 
