@@ -182,11 +182,25 @@ CreateFixPartitionConstraintsTaskList(Oid relationId)
 
 /*
  * GetShardIdAppendedConstraintNameList returns a list of constraint names that have
- * a shardId suffix matching the supplied value.
+ * a shardId suffix matching the supplied value
+ *
+ * If a partitioned table shard has a shardId suffix in a constraint name, then that
+ * constraint is inherited in the child shards as well. As the shardId of the child is
+ * different than that of the parent, it can cause issues.
  *
  * Note that we skip all foreign key and unique constraints, as the single caller of this
  * function needs the list of constraints that should be renamed, and foreign keys and
- * unique constraints should always have shardId suffixes in their names.
+ * unique constraints should always have shardId suffixes in their names to remain unique
+ * in the schema.
+ *
+ * PostgreSQL requires constraint names to be unique among the constraints of a
+ * single relation or domain. This is enforced by a unique index on
+ * conrelid + contypid + conname on pg_constraint. However there are two more limitations:
+ *	- UNIQUE constraints create UNIQUE indexes in the schema, and indexes should have
+ *	  unique names. That's the reason why it is not allowed to have 2 UNIQUE constraints
+ *	  on different tables with the same name.
+ *	- Similarly FOREIGN KEY constraints also create indexes that need unique names on the
+ *	  schema.
  */
 static List *
 GetShardIdAppendedConstraintNameList(Oid relationId, int32 shardId)

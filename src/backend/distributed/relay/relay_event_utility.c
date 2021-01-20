@@ -164,7 +164,20 @@ RelayEventExtendNames(Node *parseTree, char *schemaName, uint64 shardId)
 						AppendShardIdToName(indexName, shardId);
 					}
 
-					/* append shardId to constraint names when necessary */
+					/*
+					 * Append shardId to constraint names if
+					 *  - the table is not partitioned or
+					 *  - the table is partitioned and constraint is either FOREIGN KEY or
+					 *    UNIQUE.
+					 *
+					 * We do not want to append shardId to partitioned table shards because
+					 * the names of constraints will be inherited, and the shardId will no
+					 * longer be valid for the child table.
+					 *
+					 * FOREIGN KEY and UNIQUE constraints create indexes that should have
+					 * unique names among the indexes in a schema. These constraints should
+					 * always have shardId appended to their names to prevent deadlocks.
+					 */
 					if (!PartitionedTable(relationId) ||
 						constraint->contype == CONSTR_PRIMARY ||
 						constraint->contype == CONSTR_UNIQUE)
